@@ -1,0 +1,105 @@
+select*from billionaries;
+
+--How many country and city
+
+select count(distinct country)as country,count(distinct city) as city from billionaries;
+
+--Source based on Worth
+SELECT sources, SUM(finalWorth) AS total_worth
+FROM billionaries
+GROUP BY sources
+order by total_worth desc;
+
+#how many male and female in percent
+SELECT gender,COUNT(*) * 100.0 / (SELECT COUNT(*) FROM billionaries) AS percentage
+FROM billionaries
+GROUP BY gender;
+
+
+# Total Population by country and city
+select  country,city,sum(population_country)as Total_Population
+ from billionaries
+ group by country,city
+ order by country asc;
+
+--Life expectancy by Country
+select  country,sum(life_expectancy_country) as Total_Life_Expectancy from  billionaries 
+group by country 
+order by Total_Life_Expectancy desc;
+
+# Industries source and worth 
+select  industries,sources, sum(finalWorth)as Total_Worth
+ from billionaries
+ group by sources,industries
+ order by Total_Worth desc;
+
+--Top 10 Billionaries
+select personName,finalWorth from Billionaries 
+group by personName,finalWorth 
+order by finalWorth desc 
+limit 10 ;
+
+---cpi by country 
+select country,sum(cpi_country)as Total_cpi  from billionaries
+group by country
+order by Total_cpi desc;
+
+--GDP by Country
+select country,sum(gdp_country)as Total_gdp from billionaries
+group by country
+order by Total_gdp desc;
+
+---Total gdp based country,industries,sources,finalWorth
+select country,personName,industries,sources,finalWorth, gdp_country
+from billionaries;
+
+---How many Person & Person Worth
+ select count(personName) from Billionaries;
+ select personName,finalWorth from Billionaries
+ group by personName 
+ order by finalWorth desc
+ limit 10 ;
+
+
+# High,low ,middle total tax revenue
+SELECT personName, MAX(tax_revenue_country_country) AS highest_tax_revenue FROM billionaries
+group by personName
+limit 1;
+
+#low 
+SELECT personName, min(tax_revenue_country_country) AS lowest_tax_revenue FROM billionaries
+group by personName
+order by lowest_tax_revenue asc
+limit 3;
+
+#middle 
+SET @row_index := -1;
+SELECT AVG(tax_revenue_country_country) AS median_value
+FROM (
+    SELECT @row_index := @row_index + 1 AS row_index, tax_revenue_country_country
+    FROM billionaries
+    ORDER BY tax_revenue_country_country
+) AS subq
+WHERE subq.row_index IN (FLOOR(@row_index / 2), CEIL(@row_index / 2));
+
+
+
+#high worth
+SELECT MAX(finalWorth) AS highest_worth FROM billionaries;
+#low worth
+SELECT min(finalWorth) AS Lowest_worth FROM billionaries;
+#middle worth
+WITH OrderedValues AS (
+    SELECT
+        finalWorth,
+        PersonName,
+        ROW_NUMBER() OVER (ORDER BY finalWorth) AS row_num,
+        COUNT(*) OVER () AS total_rows
+    FROM billionaries
+)
+SELECT PersonName, AVG(finalWorth) AS median
+FROM OrderedValues
+WHERE row_num IN ( (total_rows + 1) / 2, (total_rows + 2) / 2 )
+group by  PersonName;
+
+
